@@ -200,13 +200,10 @@ Public Class FrmPtTypewiseDisc
     End Sub
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
-        ' Ensure a record is selected
         If selectedPtTypeId = 0 Then
             MessageBox.Show("Please select a record to update.")
             Return
         End If
-
-        ' Ensure at least one status is selected
         If Not (chkIsActive.Checked Or chkIsDeactive.Checked) Then
             MessageBox.Show("Please select at least one status: Active or Deactive.")
             Return
@@ -216,7 +213,6 @@ Public Class FrmPtTypewiseDisc
         Dim ptTypeId As Integer
         Dim discountValue As Integer
 
-        ' Validate PtType selection
         If cmbPtTypeWiseDiscount.SelectedValue IsNot Nothing Then
             ptTypeId = Convert.ToInt32(cmbPtTypeWiseDiscount.SelectedValue)
         Else
@@ -224,13 +220,11 @@ Public Class FrmPtTypewiseDisc
             Return
         End If
 
-        ' Validate Discount input
         If Not Integer.TryParse(txtDiscount.Text, discountValue) Then
             MessageBox.Show("Please enter a valid discount value.")
             Return
         End If
 
-        ' Use the connection string retrieved from App.config
         Using con As New SqlConnection(connectionString)
             Try
                 con.Open()
@@ -242,7 +236,6 @@ Public Class FrmPtTypewiseDisc
                     validationCmd.Parameters.AddWithValue("@OpIpType", opIpType)
                     validationCmd.Parameters.AddWithValue("@Id", selectedPtTypeId)
 
-                    ' Execute validation query
                     Dim count As Integer = Convert.ToInt32(validationCmd.ExecuteScalar())
                     If count > 0 Then
                         MessageBox.Show("The same PtType and Op-Ip Type combination already exists and cannot be activated.")
@@ -250,7 +243,6 @@ Public Class FrmPtTypewiseDisc
                     End If
                 End If
 
-                ' Proceed with the update
                 Dim cmd As New SqlCommand("
                 UPDATE mst_PtTypeWiseDiscount 
                 SET PtTypeId = @PtTypeId, OpIpType = @OpIpType, Discount = @Discount, IsActive = @IsActive 
@@ -263,10 +255,9 @@ Public Class FrmPtTypewiseDisc
 
                 Dim result As Integer = cmd.ExecuteNonQuery()
 
-                ' Notify user of the update result
                 If result > 0 Then
                     MessageBox.Show("Data updated successfully.")
-                    LoadDgvPtTypeWiseDisc() ' Refresh the DataGridView after updating
+                    LoadDgvPtTypeWiseDisc()
                 Else
                     MessageBox.Show("Data update failed.")
                 End If
