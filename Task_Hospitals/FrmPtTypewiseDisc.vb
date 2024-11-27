@@ -6,7 +6,6 @@ Public Class FrmPtTypewiseDisc
     ' Retrieve the connection string from App.config
     Dim connectionString = ConfigurationManager.ConnectionStrings("DbConnection").ConnectionString
     Private Sub FrmPtTypewiseDisc_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
         LoadCmbPtTypeWiseDisc()
         LoadDgvPtTypeWiseDisc()
         ' Set Active checkbox checked by default
@@ -160,6 +159,7 @@ Public Class FrmPtTypewiseDisc
         If e.RowIndex >= 0 Then
             Dim selectedRow As DataGridViewRow = dgvPtTypeWiseDiscount.Rows(e.RowIndex)
             btnUpdate.Enabled = True
+            btnSave.Enabled = False
             Dim ptTypeId As Object = selectedRow.Cells("PtTypeId").Value
             If ptTypeId IsNot Nothing AndAlso IsNumeric(ptTypeId) Then
                 cmbPtTypeWiseDiscount.SelectedValue = Convert.ToInt32(ptTypeId)
@@ -200,63 +200,73 @@ Public Class FrmPtTypewiseDisc
     End Sub
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        ' Ensure a record is selected
         If selectedPtTypeId = 0 Then
             MessageBox.Show("Please select a record to update.")
             Return
         End If
 
+        ' Ensure at least one status is selected
         If Not (chkIsActive.Checked Or chkIsDeactive.Checked) Then
             MessageBox.Show("Please select at least one status: Active or Deactive.")
             Return
         End If
 
         Dim opIpType As Boolean = rbtnOPD.Checked
+        Dim ptTypeId As Integer
+        Dim discountValue As Integer
 
-        ' Using the connection string retrieved from App.config
+        ' Validate PtType selection
+        If cmbPtTypeWiseDiscount.SelectedValue IsNot Nothing Then
+            ptTypeId = Convert.ToInt32(cmbPtTypeWiseDiscount.SelectedValue)
+        Else
+            MessageBox.Show("Please select a valid PtType from the ComboBox.")
+            Return
+        End If
+
+        ' Validate Discount input
+        If Not Integer.TryParse(txtDiscount.Text, discountValue) Then
+            MessageBox.Show("Please enter a valid discount value.")
+            Return
+        End If
+
+        ' Use the connection string retrieved from App.config
         Using con As New SqlConnection(connectionString)
-            ' Validate for duplicate PtTypeId and OpIpType combination
-            Dim validationCmd As New SqlCommand("SELECT COUNT(*) FROM mst_PtTypeWiseDiscount WHERE PtTypeId = @PtTypeId AND OpIpType = @OpIpType AND Id <> @Id", con)
-
-            Dim ptTypeId As Integer
-            If cmbPtTypeWiseDiscount.SelectedValue IsNot Nothing Then
-                ptTypeId = Convert.ToInt32(cmbPtTypeWiseDiscount.SelectedValue)
-            Else
-                MessageBox.Show("Please select a valid PtType from the ComboBox.")
-                Return
-            End If
-
-            Dim discountValue As Integer
-            If Not Integer.TryParse(txtDiscount.Text, discountValue) Then
-                MessageBox.Show("Please enter a valid discount value.")
-                Return
-            End If
-
-            validationCmd.Parameters.AddWithValue("@PtTypeId", ptTypeId)
-            validationCmd.Parameters.AddWithValue("@OpIpType", opIpType)
-            validationCmd.Parameters.AddWithValue("@Id", selectedPtTypeId)
-
             Try
                 con.Open()
 
-                ' Execute validation query
-                Dim count As Integer = Convert.ToInt32(validationCmd.ExecuteScalar())
-                If count > 0 Then
-                    MessageBox.Show("The same PtType and Op-Ip Type combination already exists. Please use a unique combination.")
-                    Return
+                ' Check for duplicates only if the status is Active
+                If chkIsActive.Checked Then
+                    Dim validationCmd As New SqlCommand("SELECT COUNT(*) FROM mst_PtTypeWiseDiscount WHERE PtTypeId = @PtTypeId AND OpIpType = @OpIpType AND Id <> @Id", con)
+                    validationCmd.Parameters.AddWithValue("@PtTypeId", ptTypeId)
+                    validationCmd.Parameters.AddWithValue("@OpIpType", opIpType)
+                    validationCmd.Parameters.AddWithValue("@Id", selectedPtTypeId)
+
+                    ' Execute validation query
+                    Dim count As Integer = Convert.ToInt32(validationCmd.ExecuteScalar())
+                    If count > 0 Then
+                        MessageBox.Show("The same PtType and Op-Ip Type combination already exists and cannot be activated.")
+                        Return
+                    End If
                 End If
 
-                ' Proceed with the update if validation passes
-                Dim cmd As New SqlCommand("UPDATE mst_PtTypeWiseDiscount SET PtTypeId = @PtTypeId, OpIpType = @OpIpType, Discount = @Discount WHERE Id = @Id", con)
+                ' Proceed with the update
+                Dim cmd As New SqlCommand("
+                UPDATE mst_PtTypeWiseDiscount 
+                SET PtTypeId = @PtTypeId, OpIpType = @OpIpType, Discount = @Discount, IsActive = @IsActive 
+                WHERE Id = @Id", con)
                 cmd.Parameters.AddWithValue("@PtTypeId", ptTypeId)
                 cmd.Parameters.AddWithValue("@OpIpType", opIpType)
                 cmd.Parameters.AddWithValue("@Discount", discountValue)
+                cmd.Parameters.AddWithValue("@IsActive", chkIsActive.Checked)
                 cmd.Parameters.AddWithValue("@Id", selectedPtTypeId)
 
                 Dim result As Integer = cmd.ExecuteNonQuery()
 
+                ' Notify user of the update result
                 If result > 0 Then
                     MessageBox.Show("Data updated successfully.")
-                    LoadDgvPtTypeWiseDisc()  ' Refresh the DataGridView after updating
+                    LoadDgvPtTypeWiseDisc() ' Refresh the DataGridView after updating
                 Else
                     MessageBox.Show("Data update failed.")
                 End If
@@ -268,6 +278,8 @@ Public Class FrmPtTypewiseDisc
             End Try
         End Using
     End Sub
+
+
     Private Sub CheckBoxActive_CheckedChanged(sender As Object, e As EventArgs) Handles chkIsActive.CheckedChanged
         If chkIsActive.Checked Then
             chkIsDeactive.Checked = False

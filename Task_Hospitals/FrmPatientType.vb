@@ -124,6 +124,8 @@ Public Class FrmPatientType
             chkIsDeactive.Checked = Not isActive
             ' Enable the Update button
             btnUpdate.Enabled = True
+            btnSave.Enabled = False
+
         End If
     End Sub
 
