@@ -14,11 +14,13 @@ Public Class FrmPatientType
     End Sub
 
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        ' Validate PtType input
         If String.IsNullOrWhiteSpace(txtPtType.Text) Then
             MessageBox.Show("Please fill in the PtType.")
             Return
         End If
 
+        ' Ensure at least one status is selected
         If Not (chkIsActive.Checked Or chkIsDeactive.Checked) Then
             MessageBox.Show("Please select at least one status: Active or Deactive.")
             Return
@@ -31,39 +33,39 @@ Public Class FrmPatientType
             Try
                 con.Open()
 
-                ' Check existing PtType records
-                Dim checkQuery As String = "SELECT IsActive FROM mst_PtType WHERE PtType = @PtType"
-                Using checkCmd As New SqlCommand(checkQuery, con)
-                    checkCmd.Parameters.AddWithValue("@PtType", ptTypeName)
+                ' Check for existing PtType records using stored procedure
+                Dim checkCmd As New SqlCommand("check_trn_PtTypeExists", con)
+                checkCmd.CommandType = CommandType.StoredProcedure
+                checkCmd.Parameters.AddWithValue("@PtType", ptTypeName)
 
-                    Dim hasActive As Boolean = False
-                    Dim hasDeactive As Boolean = False
+                Dim hasActive As Boolean = False
+                Dim hasDeactive As Boolean = False
 
-                    Using reader As SqlDataReader = checkCmd.ExecuteReader()
-                        While reader.Read()
-                            Dim status As Boolean = reader.GetBoolean(0)
-                            If status Then
-                                hasActive = True
-                            Else
-                                hasDeactive = True
-                            End If
-                        End While
-                    End Using
-
-                    If hasActive And hasDeactive Then
-                        MessageBox.Show("Pt Type already exists both as active and deactive. Cannot insert duplicate data.")
-                        Return
-                    ElseIf hasActive Then
-                        MessageBox.Show("Pt Type is already added and active.")
-                        Return
-                    ElseIf hasDeactive Then
-                        MessageBox.Show("Pt Type exists as deactive and will be added again.")
-                    End If
+                Using reader As SqlDataReader = checkCmd.ExecuteReader()
+                    While reader.Read()
+                        Dim status As Boolean = reader.GetBoolean(0)
+                        If status Then
+                            hasActive = True
+                        Else
+                            hasDeactive = True
+                        End If
+                    End While
                 End Using
 
-                ' Insert new PtType record
-                Dim insertQuery As String = "INSERT INTO mst_PtType (PtType, IsActive) VALUES (@PtType, @IsActive)"
-                Using insertCmd As New SqlCommand(insertQuery, con)
+                ' Handle duplicate scenarios
+                If hasActive And hasDeactive Then
+                    MessageBox.Show("Pt Type already exists both as active and deactive. Cannot insert duplicate data.")
+                    Return
+                ElseIf hasActive Then
+                    MessageBox.Show("Pt Type is already added and active.")
+                    Return
+                ElseIf hasDeactive Then
+                    MessageBox.Show("Pt Type exists as deactive and will be added again.")
+                End If
+
+                ' Insert new PtType record using stored procedure
+                Using insertCmd As New SqlCommand("inst_trn_PTypeMaster", con)
+                    insertCmd.CommandType = CommandType.StoredProcedure
                     insertCmd.Parameters.AddWithValue("@PtType", ptTypeName)
                     insertCmd.Parameters.AddWithValue("@IsActive", isActive)
 
@@ -75,6 +77,7 @@ Public Class FrmPatientType
                         MessageBox.Show("Data insertion failed.")
                     End If
                 End Using
+
             Catch ex As Exception
                 MessageBox.Show("An error occurred: " & ex.Message)
             Finally
@@ -82,11 +85,12 @@ Public Class FrmPatientType
             End Try
         End Using
     End Sub
+
     'Data GridView 
     Private Sub LoadDgvPtType()
         Using con As New SqlConnection(connectionString)
-            Dim query As String = "SELECT * FROM mst_PtType"
-            Dim cmd As New SqlCommand(query, con)
+            Dim cmd As New SqlCommand("get_trn_PtTypeList", con)
+            cmd.CommandType = CommandType.StoredProcedure
             Dim adapter As New SqlDataAdapter(cmd)
             Dim table As New DataTable()
 
@@ -154,7 +158,8 @@ Public Class FrmPatientType
 
         ' Step 1: Validate if the same PtType already exists
         Using con As New SqlConnection(connectionString)
-            Dim checkCmd As New SqlCommand("SELECT COUNT(*) FROM mst_PtType WHERE PtType = @PtType AND PtTypeId <> @PtTypeId", con)
+            Dim checkCmd As New SqlCommand("check_trn_PtTypeExistsForUpdate", con)
+            checkCmd.CommandType = CommandType.StoredProcedure
             checkCmd.Parameters.AddWithValue("@PtType", txtPtType.Text)
             checkCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
 
@@ -171,12 +176,14 @@ Public Class FrmPatientType
             End Try
         End Using
 
-        ' Step 2: Proceed with the update
+        ' Step 2: Proceed with the update using the stored procedure
         Using con As New SqlConnection(connectionString)
-            Dim updateCmd As New SqlCommand("UPDATE mst_PtType SET PtType = @PtType, IsActive = @IsActive WHERE PtTypeId = @PtTypeId", con)
+            ' Call the stored procedure to update the PtType
+            Dim updateCmd As New SqlCommand("edit_trn_PtTypeMaster", con)
+            updateCmd.CommandType = CommandType.StoredProcedure
+            updateCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
             updateCmd.Parameters.AddWithValue("@PtType", txtPtType.Text)
             updateCmd.Parameters.AddWithValue("@IsActive", If(isActive, 1, 0))
-            updateCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
 
             Try
                 con.Open()
@@ -184,7 +191,7 @@ Public Class FrmPatientType
 
                 If result > 0 Then
                     MessageBox.Show("Data updated successfully.")
-                    LoadDgvPtType()  ' Reload the DataGridView after successful update
+                    LoadDgvPtType()
                 Else
                     MessageBox.Show("Data update failed.")
                 End If
@@ -193,6 +200,7 @@ Public Class FrmPatientType
             End Try
         End Using
     End Sub
+
     Private Sub ClearFields()
         txtPtType.Clear()
 
@@ -231,8 +239,8 @@ Public Class FrmPatientType
 
         ' Using the connection to execute a search query
         Using con As New SqlConnection(connectionString)
-            Dim query As String = "SELECT * FROM mst_PtType WHERE PtType LIKE @searchText"
-            Dim cmd As New SqlCommand(query, con)
+            Dim cmd As New SqlCommand("get_trn_PtTypeSearchList", con)
+            cmd.CommandType = CommandType.StoredProcedure
             cmd.Parameters.AddWithValue("@searchText", "%" & searchText & "%")
             Dim adapter As New SqlDataAdapter(cmd)
             Dim table As New DataTable()

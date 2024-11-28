@@ -13,8 +13,8 @@ Public Class FrmPtTypewiseDisc
     End Sub
     Private Sub LoadCmbPtTypeWiseDisc()
         Using con As New SqlConnection(connectionString)
-            Dim query As String = "SELECT * FROM mst_PtType WHERE IsActive = 1"
-            Dim cmd As New SqlCommand(query, con)
+            Dim cmd As New SqlCommand("get_trn_ActivePtTypes", con)
+            cmd.CommandType = CommandType.StoredProcedure
             Dim adapter As New SqlDataAdapter(cmd)
             Dim table As New DataTable()
 
@@ -75,8 +75,8 @@ Public Class FrmPtTypewiseDisc
 
         Using con As New SqlConnection(connectionString)
             ' Validate if the combination of OpIpType and PtTypeId already exists
-            Dim validationQuery As String = "SELECT COUNT(*) FROM mst_PtTypeWiseDiscount WHERE OpIpType = @OpIpType AND PtTypeId = @PtTypeId"
-            Dim validationCmd As New SqlCommand(validationQuery, con)
+            Dim validationCmd As New SqlCommand("check_trn_PtTypeWiseDiscountExists", con)
+            validationCmd.CommandType = CommandType.StoredProcedure
             validationCmd.Parameters.AddWithValue("@OpIpType", opIpType)
             validationCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
 
@@ -89,8 +89,8 @@ Public Class FrmPtTypewiseDisc
                 End If
 
                 ' If validation passes, insert the record
-                Dim insertQuery As String = "INSERT INTO mst_PtTypeWiseDiscount (OpIpType, PtTypeId, Discount, IsActive) VALUES (@OpIpType, @PtTypeId, @Discount, @IsActive)"
-                Dim insertCmd As New SqlCommand(insertQuery, con)
+                Dim insertCmd As New SqlCommand("inst_trn_PtTypeWiseDiscountMaster", con)
+                insertCmd.CommandType = CommandType.StoredProcedure
                 insertCmd.Parameters.AddWithValue("@OpIpType", opIpType)
                 insertCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
                 insertCmd.Parameters.AddWithValue("@Discount", discountValue)
@@ -113,15 +113,8 @@ Public Class FrmPtTypewiseDisc
     End Sub
     Private Sub LoadDgvPtTypeWiseDisc()
         Using con As New SqlConnection(connectionString)
-            Dim query As String = "SELECT d.Id, " &
-                                  "IIF(d.OpIpType = 1, 'OPD', 'IPD') AS OpIpType, " &
-                                  "p.PtType AS PatientType, " &
-                                  "p.PtTypeId, " &
-                                  "d.Discount, " &
-                                  "d.IsActive " &
-                                  "FROM mst_PtTypeWiseDiscount d " &
-                                  "JOIN mst_PtType p ON d.PtTypeId = p.PtTypeId"
-            Dim cmd As New SqlCommand(query, con)
+            Dim cmd As New SqlCommand("get_trn_PtTypeWiseDiscountList", con)
+            cmd.CommandType = CommandType.StoredProcedure
             Dim adapter As New SqlDataAdapter(cmd)
             Dim table As New DataTable()
 
@@ -231,7 +224,8 @@ Public Class FrmPtTypewiseDisc
 
                 ' Check for duplicates only if the status is Active
                 If chkIsActive.Checked Then
-                    Dim validationCmd As New SqlCommand("SELECT COUNT(*) FROM mst_PtTypeWiseDiscount WHERE PtTypeId = @PtTypeId AND OpIpType = @OpIpType AND Id <> @Id", con)
+                    Dim validationCmd As New SqlCommand("check_trn_PtTypeWiseDiscountDuplicate", con)
+                    validationCmd.CommandType = CommandType.StoredProcedure
                     validationCmd.Parameters.AddWithValue("@PtTypeId", ptTypeId)
                     validationCmd.Parameters.AddWithValue("@OpIpType", opIpType)
                     validationCmd.Parameters.AddWithValue("@Id", selectedPtTypeId)
@@ -243,10 +237,8 @@ Public Class FrmPtTypewiseDisc
                     End If
                 End If
 
-                Dim cmd As New SqlCommand("
-                UPDATE mst_PtTypeWiseDiscount 
-                SET PtTypeId = @PtTypeId, OpIpType = @OpIpType, Discount = @Discount, IsActive = @IsActive 
-                WHERE Id = @Id", con)
+                Dim cmd As New SqlCommand("edit_trn_PtTypeWiseDiscountMaster", con)
+                cmd.CommandType = CommandType.StoredProcedure
                 cmd.Parameters.AddWithValue("@PtTypeId", ptTypeId)
                 cmd.Parameters.AddWithValue("@OpIpType", opIpType)
                 cmd.Parameters.AddWithValue("@Discount", discountValue)
@@ -307,17 +299,8 @@ Public Class FrmPtTypewiseDisc
 
         ' Use the connection string retrieved from App.config
         Using con As New SqlConnection(connectionString)
-            Dim query As String = "SELECT d.Id, " &
-                                  "IIF(d.OpIpType = 1, 'OPD', 'IPD') AS OpIpType, " &
-                                  "p.PtType AS PatientType, " &
-                                  "p.PtTypeId, " &
-                                  "d.Discount, " &
-                                  "d.IsActive " &
-                                  "FROM mst_PtTypeWiseDiscount d " &
-                                  "JOIN mst_PtType p ON d.PtTypeId = p.PtTypeId " &
-                                  "WHERE p.PtType LIKE @SearchText"
-
-            Dim cmd As New SqlCommand(query, con)
+            Dim cmd As New SqlCommand("get_trn_PtTypeWiseDiscountSearchList", con)
+            cmd.CommandType = CommandType.StoredProcedure
             cmd.Parameters.AddWithValue("@searchText", "%" & searchText & "%")
             Dim adapter As New SqlDataAdapter(cmd)
             Dim table As New DataTable()
