@@ -135,50 +135,50 @@ Public Class FrmPatientType
 
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
-        ' Validation: Ensure a record is selected
-        If selectedPtTypeId = 0 Then
-            MessageBox.Show("Please select a record to update.")
-            Return
+        Dim isOnlyDeactiveSelected As Boolean = chkIsDeactive.Checked AndAlso Not chkIsActive.Checked
+
+        ' Skip validations if only Deactive is selected
+        If Not isOnlyDeactiveSelected Then
+            If selectedPtTypeId = 0 Then
+                MessageBox.Show("Please select a record to update.")
+                Return
+            End If
+
+            If String.IsNullOrWhiteSpace(txtPtType.Text) Then
+                MessageBox.Show("PtType cannot be empty.")
+                Return
+            End If
+
+            If Not (chkIsActive.Checked Or chkIsDeactive.Checked) Then
+                MessageBox.Show("Please select at least one status: Active or Deactive.")
+                Return
+            End If
         End If
 
-        ' Validation: Ensure PtType is not empty
-        If String.IsNullOrWhiteSpace(txtPtType.Text) Then
-            MessageBox.Show("PtType cannot be empty.")
-            Return
-        End If
-
-        ' Validation: Ensure at least one status is selected
-        If Not (chkIsActive.Checked Or chkIsDeactive.Checked) Then
-            MessageBox.Show("Please select at least one status: Active or Deactive.")
-            Return
-        End If
-
-        ' Determine the active status
         Dim isActive As Boolean = chkIsActive.Checked
 
-        ' Step 1: Validate if the same PtType already exists
-        Using con As New SqlConnection(connectionString)
-            Dim checkCmd As New SqlCommand("check_trn_PtTypeExistsForUpdate", con)
-            checkCmd.CommandType = CommandType.StoredProcedure
-            checkCmd.Parameters.AddWithValue("@PtType", txtPtType.Text)
-            checkCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
+        If Not isOnlyDeactiveSelected Then
+            Using con As New SqlConnection(connectionString)
+                Dim checkCmd As New SqlCommand("check_trn_PtTypeExistsForUpdate", con)
+                checkCmd.CommandType = CommandType.StoredProcedure
+                checkCmd.Parameters.AddWithValue("@PtType", txtPtType.Text)
+                checkCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
 
-            Try
-                con.Open()
-                Dim count As Integer = Convert.ToInt32(checkCmd.ExecuteScalar())
-                If count > 0 Then
-                    MessageBox.Show("The same PtType already exists. Please enter a unique PtType.")
+                Try
+                    con.Open()
+                    Dim count As Integer = Convert.ToInt32(checkCmd.ExecuteScalar())
+                    If count > 0 Then
+                        MessageBox.Show("The same PtType already exists. Please enter a unique PtType.")
+                        Return
+                    End If
+                Catch ex As Exception
+                    MessageBox.Show("An error occurred while validating PtType: " & ex.Message)
                     Return
-                End If
-            Catch ex As Exception
-                MessageBox.Show("An error occurred while validating PtType: " & ex.Message)
-                Return
-            End Try
-        End Using
+                End Try
+            End Using
+        End If
 
-        ' Step 2: Proceed with the update using the stored procedure
         Using con As New SqlConnection(connectionString)
-            ' Call the stored procedure to update the PtType
             Dim updateCmd As New SqlCommand("edit_trn_PtTypeMaster", con)
             updateCmd.CommandType = CommandType.StoredProcedure
             updateCmd.Parameters.AddWithValue("@PtTypeId", selectedPtTypeId)
@@ -200,6 +200,7 @@ Public Class FrmPatientType
             End Try
         End Using
     End Sub
+
 
     Private Sub ClearFields()
         txtPtType.Clear()

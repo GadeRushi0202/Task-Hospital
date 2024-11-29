@@ -148,7 +148,7 @@ Public Class FrmPtTypewiseDisc
         End Using
     End Sub
     Private selectedPtTypeId As Integer
-    Private Sub dgvPtTypeWiseDiscount_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvPtTypeWiseDiscount.CellContentClick
+    Private Sub dgvPtTypeWiseDiscount_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvPtTypeWiseDiscount.CellClick
         If e.RowIndex >= 0 Then
             Dim selectedRow As DataGridViewRow = dgvPtTypeWiseDiscount.Rows(e.RowIndex)
             btnUpdate.Enabled = True
