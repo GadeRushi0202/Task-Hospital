@@ -139,7 +139,7 @@ Public Class FrmPtTypewiseDisc
                 dgvPtTypeWiseDiscount.Columns("OpIpType").ReadOnly = True
                 dgvPtTypeWiseDiscount.Columns("PatientType").ReadOnly = True
                 dgvPtTypeWiseDiscount.Columns("Discount").ReadOnly = True
-                dgvPtTypeWiseDiscount.Columns("IsActive").ReadOnly = True
+                'dgvPtTypeWiseDiscount.Columns("IsActive").ReadOnly = True
 
                 dgvPtTypeWiseDiscount.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             Catch ex As Exception
@@ -332,5 +332,54 @@ Public Class FrmPtTypewiseDisc
 
     Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
         Me.Close()
+    End Sub
+
+    Private Sub btnUpdateActiveStatus_Click(sender As Object, e As EventArgs) Handles btnUpdateActiveStatus.Click
+        Dim rowsToUpdate As New List(Of Tuple(Of Integer, Boolean))()
+
+        ' Loop through the DataGridView rows
+        For Each row As DataGridViewRow In dgvPtTypeWiseDiscount.Rows
+            ' Check if the row contains valid data
+            If row.Cells("Id").Value IsNot Nothing AndAlso row.Cells("IsActive").Value IsNot Nothing Then
+                Dim recordId As Integer = Convert.ToInt32(row.Cells("Id").Value)
+                Dim isActive As Boolean = Convert.ToBoolean(row.Cells("IsActive").Value)
+
+                ' Add the record ID and new IsActive status to the list
+                rowsToUpdate.Add(New Tuple(Of Integer, Boolean)(recordId, isActive))
+            End If
+        Next
+
+        ' Check if there are rows to update
+        If rowsToUpdate.Count = 0 Then
+            MessageBox.Show("No rows selected for update.")
+            Return
+        End If
+
+        ' Update the database
+        Using con As New SqlConnection(connectionString)
+            Try
+                con.Open()
+
+                ' Begin a transaction
+                Dim transaction = con.BeginTransaction()
+
+                For Each record In rowsToUpdate
+                    Dim updateCmd As New SqlCommand("edit_trn_PtTypeWiseDiscountActivePtTypes", con, transaction)
+                    updateCmd.CommandType = CommandType.StoredProcedure
+                    updateCmd.Parameters.AddWithValue("@IsActive", record.Item2) ' IsActive value
+                    updateCmd.Parameters.AddWithValue("@Id", record.Item1) ' Record ID
+                    updateCmd.ExecuteNonQuery()
+                Next
+
+                ' Commit the transaction
+                transaction.Commit()
+
+                MessageBox.Show("Statuses updated successfully.")
+                LoadDgvPtTypeWiseDisc()
+
+            Catch ex As Exception
+                MessageBox.Show("An error occurred: " & ex.Message)
+            End Try
+        End Using
     End Sub
 End Class

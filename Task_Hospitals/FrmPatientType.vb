@@ -8,7 +8,6 @@ Public Class FrmPatientType
     Dim connectionString = ConfigurationManager.ConnectionStrings("DbConnection").ConnectionString
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         LoadDgvPtType()
-
         ' Set Active checkbox checked by default
         chkIsActive.Checked = True
     End Sub
@@ -108,9 +107,9 @@ Public Class FrmPatientType
                 dgvPtType.DataSource = table
                 dgvPtType.Columns("Sr.No").DisplayIndex = 0
                 dgvPtType.Columns("PtTypeId").Visible = False ' Hide the PtTypeId column
-                dgvPtType.Columns("Sr.No").ReadOnly = True ' Make Sr.No column read-only
+                'dgvPtType.Columns("Sr.No").ReadOnly = True ' Make Sr.No column read-only
                 dgvPtType.Columns("PtType").ReadOnly = True
-                dgvPtType.Columns("IsActive").ReadOnly = True
+                'dgvPtType.Columns("IsActive").ReadOnly = True
                 dgvPtType.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
 
             Catch ex As Exception
@@ -276,4 +275,51 @@ Public Class FrmPatientType
     Private Sub btnPtTypeWiseDisc_Click(sender As Object, e As EventArgs) Handles btnPtTypeWiseDisc.Click
         FrmPtTypewiseDisc.Show()
     End Sub
+
+
+    Private Sub btnUpdateActiveStatus_Click(sender As Object, e As EventArgs) Handles btnUpdateActiveStatus.Click
+        Dim rowsToUpdate As New List(Of Tuple(Of Integer, Boolean))()
+        Dim anySelected As Boolean = False
+
+        For Each row As DataGridViewRow In dgvPtType.Rows
+            If row.Cells("PtTypeId").Value IsNot Nothing Then
+                Dim ptTypeId As Integer = Convert.ToInt32(row.Cells("PtTypeId").Value)
+                Dim isActive As Boolean = Convert.ToBoolean(row.Cells("IsActive").Value)
+
+                If isActive Then
+                    anySelected = True
+                End If
+                rowsToUpdate.Add(New Tuple(Of Integer, Boolean)(ptTypeId, isActive))
+            End If
+        Next
+        If Not anySelected Then
+            MessageBox.Show("Please select at least one checkbox to update.")
+            Return
+        End If
+
+        Using con As New SqlConnection(connectionString)
+            Try
+                con.Open()
+                Dim transaction = con.BeginTransaction()
+
+                For Each row In rowsToUpdate
+                    Dim updateCmd As New SqlCommand("edit_trn_PtTypeActiveStatus", con, transaction)
+                    updateCmd.CommandType = CommandType.StoredProcedure
+                    updateCmd.Parameters.AddWithValue("@IsActive", row.Item2)
+                    updateCmd.Parameters.AddWithValue("@PtTypeId", row.Item1)
+                    updateCmd.ExecuteNonQuery()
+                Next
+
+                transaction.Commit()
+                MessageBox.Show("Statuses updated successfully.")
+
+                LoadDgvPtType()
+
+            Catch ex As Exception
+                MessageBox.Show("An error occurred: " & ex.Message)
+            End Try
+        End Using
+    End Sub
+
+
 End Class

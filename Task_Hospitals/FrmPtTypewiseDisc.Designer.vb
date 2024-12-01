@@ -43,6 +43,7 @@ Partial Class FrmPtTypewiseDisc
         Me.btnUpdate = New System.Windows.Forms.Button()
         Me.btnNew = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.btnUpdateActiveStatus = New System.Windows.Forms.Button()
         Me.Panel2.SuspendLayout()
         CType(Me.dgvPtTypeWiseDiscount, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
@@ -104,6 +105,7 @@ Partial Class FrmPtTypewiseDisc
         'Panel1
         '
         Me.Panel1.BackColor = System.Drawing.Color.FromArgb(CType(CType(186, Byte), Integer), CType(CType(231, Byte), Integer), CType(CType(254, Byte), Integer))
+        Me.Panel1.Controls.Add(Me.btnUpdateActiveStatus)
         Me.Panel1.Controls.Add(Me.chkIsDeactive)
         Me.Panel1.Controls.Add(Me.chkIsActive)
         Me.Panel1.Controls.Add(Me.txtDiscount)
@@ -296,6 +298,22 @@ Partial Class FrmPtTypewiseDisc
         Me.Label1.TabIndex = 4
         Me.Label1.Text = "Patient Type Wise Discount"
         '
+        'btnUpdateActiveStatus
+        '
+        Me.btnUpdateActiveStatus.BackColor = System.Drawing.Color.DarkOrange
+        Me.btnUpdateActiveStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnUpdateActiveStatus.Font = New System.Drawing.Font("Times New Roman", 10.8!, System.Drawing.FontStyle.Bold)
+        Me.btnUpdateActiveStatus.ForeColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.btnUpdateActiveStatus.Image = CType(resources.GetObject("btnUpdateActiveStatus.Image"), System.Drawing.Image)
+        Me.btnUpdateActiveStatus.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.btnUpdateActiveStatus.Location = New System.Drawing.Point(12, 414)
+        Me.btnUpdateActiveStatus.Name = "btnUpdateActiveStatus"
+        Me.btnUpdateActiveStatus.Size = New System.Drawing.Size(304, 61)
+        Me.btnUpdateActiveStatus.TabIndex = 17
+        Me.btnUpdateActiveStatus.Text = "Update Active Deactive "
+        Me.btnUpdateActiveStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.btnUpdateActiveStatus.UseVisualStyleBackColor = False
+        '
         'FrmPtTypewiseDisc
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
@@ -337,4 +355,5 @@ Partial Class FrmPtTypewiseDisc
     Friend WithEvents txtDiscount As TextBox
     Friend WithEvents chkIsDeactive As CheckBox
     Friend WithEvents chkIsActive As CheckBox
+    Friend WithEvents btnUpdateActiveStatus As Button
 End Class

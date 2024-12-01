@@ -24,6 +24,7 @@ Partial Class FrmPatientType
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmPatientType))
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.btnPtTypeWiseDisc = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.btnUpdate = New System.Windows.Forms.Button()
@@ -38,7 +39,7 @@ Partial Class FrmPatientType
         Me.Label2 = New System.Windows.Forms.Label()
         Me.dgvPtType = New System.Windows.Forms.DataGridView()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.btnPtTypeWiseDisc = New System.Windows.Forms.Button()
+        Me.btnUpdateActiveStatus = New System.Windows.Forms.Button()
         Me.Panel1.SuspendLayout()
         Me.Panel2.SuspendLayout()
         CType(Me.dgvPtType, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -47,6 +48,7 @@ Partial Class FrmPatientType
         'Panel1
         '
         Me.Panel1.BackColor = System.Drawing.Color.FromArgb(CType(CType(186, Byte), Integer), CType(CType(231, Byte), Integer), CType(CType(254, Byte), Integer))
+        Me.Panel1.Controls.Add(Me.btnUpdateActiveStatus)
         Me.Panel1.Controls.Add(Me.btnPtTypeWiseDisc)
         Me.Panel1.Controls.Add(Me.btnClose)
         Me.Panel1.Controls.Add(Me.btnSave)
@@ -60,6 +62,15 @@ Partial Class FrmPatientType
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(314, 570)
         Me.Panel1.TabIndex = 0
+        '
+        'btnPtTypeWiseDisc
+        '
+        Me.btnPtTypeWiseDisc.Location = New System.Drawing.Point(3, 305)
+        Me.btnPtTypeWiseDisc.Name = "btnPtTypeWiseDisc"
+        Me.btnPtTypeWiseDisc.Size = New System.Drawing.Size(208, 23)
+        Me.btnPtTypeWiseDisc.TabIndex = 7
+        Me.btnPtTypeWiseDisc.Text = "Pt Type Wise Discount"
+        Me.btnPtTypeWiseDisc.UseVisualStyleBackColor = True
         '
         'btnClose
         '
@@ -233,14 +244,21 @@ Partial Class FrmPatientType
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "Patient Type"
         '
-        'btnPtTypeWiseDisc
+        'btnUpdateActiveStatus
         '
-        Me.btnPtTypeWiseDisc.Location = New System.Drawing.Point(26, 367)
-        Me.btnPtTypeWiseDisc.Name = "btnPtTypeWiseDisc"
-        Me.btnPtTypeWiseDisc.Size = New System.Drawing.Size(208, 23)
-        Me.btnPtTypeWiseDisc.TabIndex = 7
-        Me.btnPtTypeWiseDisc.Text = "Pt Type Wise Discount"
-        Me.btnPtTypeWiseDisc.UseVisualStyleBackColor = True
+        Me.btnUpdateActiveStatus.BackColor = System.Drawing.Color.DarkOrange
+        Me.btnUpdateActiveStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnUpdateActiveStatus.Font = New System.Drawing.Font("Times New Roman", 10.8!, System.Drawing.FontStyle.Bold)
+        Me.btnUpdateActiveStatus.ForeColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.btnUpdateActiveStatus.Image = CType(resources.GetObject("btnUpdateActiveStatus.Image"), System.Drawing.Image)
+        Me.btnUpdateActiveStatus.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.btnUpdateActiveStatus.Location = New System.Drawing.Point(3, 347)
+        Me.btnUpdateActiveStatus.Name = "btnUpdateActiveStatus"
+        Me.btnUpdateActiveStatus.Size = New System.Drawing.Size(304, 61)
+        Me.btnUpdateActiveStatus.TabIndex = 8
+        Me.btnUpdateActiveStatus.Text = "Update Active Deactive "
+        Me.btnUpdateActiveStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.btnUpdateActiveStatus.UseVisualStyleBackColor = False
         '
         'FrmPatientType
         '
@@ -279,4 +297,5 @@ Partial Class FrmPatientType
     Friend WithEvents txtSearchPtType As TextBox
     Friend WithEvents btnSearchPtType As Button
     Friend WithEvents btnPtTypeWiseDisc As Button
+    Friend WithEvents btnUpdateActiveStatus As Button
 End Class
